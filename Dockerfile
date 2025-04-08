@@ -6,14 +6,20 @@ ENV DB_TYPE=$DB_TYPE
 
 RUN apk add --no-cache python3 py3-pip make gcc g++
 
-COPY . /app
+# COPY . /app
 
-COPY package.json yarn.lock /app/
-
+# COPY package.json yarn.lock /app/
 WORKDIR /app
+
+# Copy only package files first to leverage Docker cache
+COPY package.json yarn.lock ./
+
+#WORKDIR /app
 
 RUN npm install -g pnpm
 RUN yarn install --frozen-lockfile && npx browserslist@latest --update-db
+COPY . .
+
 RUN npm run build:without-migrate
 
 FROM node:16-alpine3.15 as runner
